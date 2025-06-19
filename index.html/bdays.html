@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Catch the Emojis for Sandhya!</title>
+  <style>
+    body {
+      margin: 0;
+      background: linear-gradient(to right, #ff9a9e, #fad0c4, #fbc2eb, #a18cd1);
+      font-family: 'Comic Sans MS', cursive;
+      overflow: hidden;
+    }
+
+    #gameArea {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #basket {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 50px;
+      background: #ff66a3;
+      border-radius: 30px;
+      text-align: center;
+      font-size: 2em;
+      display: none;
+    }
+
+    .falling {
+      position: absolute;
+      font-size: 2em;
+      animation: fall 5s linear infinite;
+    }
+
+    @keyframes fall {
+      0% { top: -50px; }
+      100% { top: 100vh; }
+    }
+
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 24px;
+      color: #d6006e;
+      display: none;
+    }
+
+    #message {
+      display: none;
+      position: absolute;
+      top: 30%;
+      width: 100%;
+      text-align: center;
+      font-size: 2em;
+      color: #ff3399;
+      line-height: 1.6;
+    }
+
+    #startScreen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    #startScreen h1 {
+      color: #ff3399;
+      font-size: 2.5em;
+      margin-bottom: 20px;
+    }
+
+    #startBtn {
+      padding: 15px 30px;
+      background: #ff66a3;
+      color: white;
+      font-size: 1.2em;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    #startBtn:hover {
+      background: #ff3380;
+    }
+
+    #countdown {
+      display: none;
+      position: absolute;
+      top: 40%;
+      width: 100%;
+      text-align: center;
+      font-size: 5em;
+      color: #ff3399;
+      z-index: 9;
+    }
+
+    #endBtn {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      padding: 10px 20px;
+      background: #ff3399;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1em;
+      cursor: pointer;
+      display: none;
+      z-index: 11;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+  <div id="gameArea">
+    <div id="startScreen">
+      <h1>Oii Sandhu Paapa 💖<br>Ready to play a game baby girllll ?</h1>
+      <button id="startBtn">Start Game</button>
+    </div>
+
+    <div id="countdown">3</div>
+    <div id="basket">🧺</div>
+    <div id="score">Score: 0</div>
+    <div id="message">
+      🎉 Happy Birthday, Sandhya! 🎉<br>
+      You are my world and everything I need 💖<br>
+      Happy 19 my dear chakarakutty! 💖
+    </div>
+    <button id="endBtn">End Game</button>
+
+    <!-- Background music and sound -->
+    <audio id="bgMusic" src="https://assets.mixkit.co/music/preview/mixkit-a-day-to-remember-689.mp3" loop></audio>
+    <audio id="catchSound" src="https://assets.mixkit.co/sfx/preview/mixkit-game-ball-tap-2073.mp3"></audio>
+    <audio id="birthdaySound" src="https://assets.mixkit.co/sfx/preview/mixkit-happy-birthday-to-you-579.mp3"></audio>
+    <audio id="countdownSound" src="https://assets.mixkit.co/sfx/preview/mixkit-bell-notification-933.mp3"></audio>
+  </div>
+
+  <script>
+    const basket = document.getElementById("basket");
+    const scoreText = document.getElementById("score");
+    const message = document.getElementById("message");
+    const startScreen = document.getElementById("startScreen");
+    const startBtn = document.getElementById("startBtn");
+    const countdown = document.getElementById("countdown");
+    const bgMusic = document.getElementById("bgMusic");
+    const catchSound = document.getElementById("catchSound");
+    const birthdaySound = document.getElementById("birthdaySound");
+    const countdownSound = document.getElementById("countdownSound");
+    const endBtn = document.getElementById("endBtn");
+
+    let score = 0;
+    let items = [];
+    let gameStarted = false;
+
+    const emojis = ["💖", "⭐", "🍫", "🍬", "🍭", "💝", "🎀"];
+
+    document.addEventListener("mousemove", e => {
+      if (!gameStarted) return;
+      let x = e.clientX;
+      basket.style.left = x - 50 + "px";
+    });
+
+    function createItem() {
+      if (!gameStarted) return;
+      const item = document.createElement("div");
+      item.classList.add("falling");
+      item.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+      item.style.left = Math.random() * (window.innerWidth - 30) + "px";
+      item.style.top = "0px";
+      document.getElementById("gameArea").appendChild(item);
+      items.push(item);
+    }
+
+    function moveItems() {
+      if (!gameStarted) return;
+      items.forEach((item, i) => {
+        let top = parseFloat(item.style.top);
+        item.style.top = top + 5 + "px";
+
+        const itemRect = item.getBoundingClientRect();
+        const basketRect = basket.getBoundingClientRect();
+
+        if (
+          itemRect.bottom >= basketRect.top &&
+          itemRect.left < basketRect.right &&
+          itemRect.right > basketRect.left
+        ) {
+          item.remove();
+          items.splice(i, 1);
+          score++;
+          scoreText.innerText = "Score: " + score;
+          catchSound.play();
+
+          if (score === 10) {
+            showBirthdayMessage();
+          }
+        }
+
+        if (top > window.innerHeight) {
+          item.remove();
+          items.splice(i, 1);
+        }
+      });
+    }
+
+    function showBirthdayMessage() {
+      message.style.display = "block";
+      birthdaySound.play();
+      confetti({
+        particleCount: 200,
+        spread: 180,
+        origin: { y: 0.6 }
+      });
+    }
+
+    function runCountdown(callback) {
+      let count = 3;
+      countdown.innerText = count;
+      countdown.style.display = "block";
+
+      const interval = setInterval(() => {
+        count--;
+        if (count >= 0) {
+          countdown.innerText = count > 0 ? count : "Go!";
+        }
+        if (count < 0) {
+          clearInterval(interval);
+          setTimeout(() => {
+            countdownSound.play();
+            countdown.style.display = "none";
+            callback();
+          }, 500);
+        }
+      }, 1000);
+    }
+
+    setInterval(createItem, 900);
+    setInterval(moveItems, 50);
+
+    startBtn.addEventListener('click', () => {
+      startScreen.style.display = "none";
+      runCountdown(() => {
+        basket.style.display = "block";
+        scoreText.style.display = "block";
+        endBtn.style.display = "block";
+        gameStarted = true;
+        bgMusic.play().catch(e => console.log("Autoplay blocked"));
+      });
+    });
+
+    endBtn.addEventListener('click', () => {
+      gameStarted = false;
+      bgMusic.pause();
+      items.forEach(item => item.remove());
+      items = [];
+      basket.style.display = "none";
+      scoreText.style.display = "none";
+      endBtn.style.display = "none";
+      message.style.display = "none";
+      startScreen.style.display = "flex";
+      score = 0;
+      scoreText.innerText = "Score: 0";
+    });
+
+    window.addEventListener("click", () => {
+      bgMusic.play().catch(() => {});
+    }, { once: true });
+  </script>
+</body>
+</html>
